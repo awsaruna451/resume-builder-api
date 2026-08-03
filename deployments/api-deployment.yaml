@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resume-builder-api
+  namespace: resume-builder
+spec:
+  # Kept at 1 replica because the uploads volume below is ReadWriteOnce (EBS) —
+  # a second pod couldn't mount it, and even if it could, uploads written by
+  # one pod wouldn't be visible to the other. Move uploads to S3 (with an IAM
+  # role for this pod) if you want to scale past 1 replica safely.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resume-builder-api
+  template:
+    metadata:
+      labels:
+        app: resume-builder-api
+    spec:
+      containers:
+        - name: api
+          # Pin to a commit SHA tag, not :latest — see note in the UI deployment.
+          image: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-api:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          env:
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "resume_builder"
+          envFrom:
+            - secretRef:
+                name: resume-builder-secrets   # pulls DB_USERNAME, DB_PASSWORD, JWT_SECRET
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: resume-uploads-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: resume-builder-api
+  namespace: resume-builder
+  annotations:
+    # Overrides the ingress-wide "/" health check default for just this
+    # target group, since the API's real health endpoint lives elsewhere.
+    alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
+spec:
+  selector:
+    app: resume-builder-api
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: resume-uploads-pvc
+  namespace: resume-builder
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp2
+  resources:
+    requests:
+      storage: 1Gi

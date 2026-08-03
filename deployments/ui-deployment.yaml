@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resume-builder-ui
+  namespace: resume-builder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resume-builder-ui
+  template:
+    metadata:
+      labels:
+        app: resume-builder-ui
+    spec:
+      containers:
+        - name: ui
+          # Pin to a commit SHA tag, not :latest, so ArgoCD can detect new builds
+          # and you can roll back. Your GitLab CI job should tag+push as
+          # <ecr-repo>:$CI_COMMIT_SHORT_SHA and update this line (or use
+          # ArgoCD Image Updater to automate it).
+          image: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-ui:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: resume-builder-ui
+  namespace: resume-builder
+spec:
+  selector:
+    app: resume-builder-ui
+  ports:
+    - port: 80
+      targetPort: 80

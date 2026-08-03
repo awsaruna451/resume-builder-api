@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: resume-builder-ingress
+  namespace: resume-builder
+  annotations:
+    # nginx routes by regex by default when you need path rewriting; for
+    # plain prefix matching like this you often don't need any annotations
+    # at all. A couple of common ones you may want:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"     # flip to "true" once you have TLS
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    # Health checking with nginx is done via container readinessProbe on
+    # your Deployments/Pods, not an ingress annotation -- there is no
+    # nginx equivalent of alb's healthcheck-path/-interval/-threshold
+    # annotations. Set readinessProbe: httpGet path /actuator/health on
+    # the resume-builder-api pod spec instead.
+spec:
+  ingressClassName: nginx   # was: alb -- this now matches the IngressClass the Helm chart created
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: resume-builder-api
+                port:
+                  number: 8080
+          - path: /oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: resume-builder-api
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: resume-builder-ui
+                port:
+                  number: 80
+# No separate IngressClass object needed here -- the ingress-nginx Helm
+# chart (installed via the nginx-ingress Terraform module) creates its own
+# IngressClass named "nginx" automatically via controller.ingressClassResource.
