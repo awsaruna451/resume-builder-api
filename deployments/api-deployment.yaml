@@ -20,7 +20,7 @@ spec:
       containers:
         - name: api
           # Pin to a commit SHA tag, not :latest — see note in the UI deployment.
-          image: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-api:latest
+          image: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-api:dev-latest
           ports:
             - containerPort: 8080
           resources:

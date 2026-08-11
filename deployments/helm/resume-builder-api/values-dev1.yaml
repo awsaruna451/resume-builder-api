@@ -1,0 +1,4 @@
+secrets:
+  DB_USERNAME: "myuser"
+  DB_PASSWORD: "mypassword"
+  JWT_SECRET: "my-super-secret-key"

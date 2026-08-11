@@ -19,7 +19,7 @@ spec:
           # and you can roll back. Your GitLab CI job should tag+push as
           # <ecr-repo>:$CI_COMMIT_SHORT_SHA and update this line (or use
           # ArgoCD Image Updater to automate it).
-          image: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-ui:latest
+          image: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-ui:dev-latest
           ports:
             - containerPort: 80
           resources:

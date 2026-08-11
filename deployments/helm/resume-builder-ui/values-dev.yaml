@@ -1,0 +1,8 @@
+# helm install resume-builder-ui . -n resume-builder --create-namespace -f values-dev.yaml
+
+image:
+  tag: dev-latest   # replace with $CI_COMMIT_SHORT_SHA before real use
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"

@@ -1,0 +1,102 @@
+# Default values for resume-builder-api.
+# Override per-environment with e.g. -f values-dev.yaml or --set flags.
+
+replicaCount: 1
+# NOTE: keep at 1 while uploads uses a ReadWriteOnce (EBS) PVC — a second pod
+# can't mount it, and one pod's writes wouldn't be visible to another anyway.
+# Move uploads to S3 (with an IAM role for the pod) before scaling this out.
+
+image:
+  repository: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-api
+  tag: dev-latest   # pin to a commit SHA in real environments, not :latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  port: 8080
+  targetPort: 8080
+  annotations: {}
+    # alb.ingress.kubernetes.io/healthcheck-path: /actuator/health
+    # Only needed if you're fronting this with an ALB Ingress instead of nginx.
+
+containerPort: 8080
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+probes:
+  path: /actuator/health
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+
+# Plain (non-secret) env vars injected directly into the container.
+env:
+  DB_PORT: "5432"
+  DB_NAME: "resume_builder"
+
+# Name of the k8s Secret consumed via envFrom (normally produced by the
+# ExternalSecret below — DB_USERNAME, DB_PASSWORD, JWT_SECRET, etc).
+existingSecretName: resume-builder-secrets
+
+persistence:
+  enabled: true
+  claimName: resume-uploads-pvc
+  accessMode: ReadWriteOnce
+  storageClassName: gp2
+  size: 1Gi
+  mountPath: /app/uploads
+
+externalSecret:
+  enabled: true
+  refreshInterval: 1h
+  secretStoreName: aws-secrets-manager
+  secretStoreKind: ClusterSecretStore
+  targetSecretName: resume-builder-secrets
+  data:
+    - secretKey: DB_HOST
+      remoteKey: /tf-practice/dev/db-credentials
+      property: host
+    - secretKey: DB_USERNAME
+      remoteKey: /tf-practice/dev/db-credentials
+      property: username
+    - secretKey: DB_PASSWORD
+      remoteKey: /tf-practice/dev/db-credentials
+      property: password
+    - secretKey: JWT_SECRET
+      remoteKey: /tf-practice/dev/jwt-secret
+      property: secret
+    - secretKey: GOOGLE_CLIENT_ID
+      remoteKey: /tf-practice/dev/google-oauth
+      property: client_id
+    - secretKey: GOOGLE_CLIENT_SECRET
+      remoteKey: /tf-practice/dev/google-oauth
+      property: client_secret
+
+# Ingress for this API only. The UI's "/" route lives in a separate chart/
+# release since it points at a different Service (resume-builder-ui).
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"   # flip to "true" once you have TLS
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  paths:
+    - path: /api
+      pathType: Prefix
+    - path: /oauth2
+      pathType: Prefix
+  tls: []
+    # - secretName: resume-builder-tls
+    #   hosts:
+    #     - resume-builder.example.com

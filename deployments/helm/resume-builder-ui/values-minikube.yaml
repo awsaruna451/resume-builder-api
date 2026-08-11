@@ -1,0 +1,16 @@
+# For local minikube testing.
+#
+#   minikube start
+#   minikube addons enable ingress
+#   eval $(minikube docker-env)     # if building the image locally
+#   helm install resume-builder-ui . -n resume-builder --create-namespace -f values-minikube.yaml
+
+image:
+  repository: resume-builder-ui
+  tag: local
+  pullPolicy: IfNotPresent
+
+ingress:
+  ingressClassName: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"

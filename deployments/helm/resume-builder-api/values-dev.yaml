@@ -1,0 +1,10 @@
+# Example override file for the dev environment.
+# helm install resume-builder-api . -n resume-builder --create-namespace -f values-dev.yaml
+
+image:
+  tag: dev-latest   # replace with a commit SHA before real use
+
+ingress:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
