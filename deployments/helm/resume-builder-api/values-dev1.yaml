@@ -10,4 +10,4 @@ db:
   host: resume-builder-db-db.resume-builder.svc.cluster.local
   port: 5432
   name: resume_builder
-  existingSecretName: resume-builder-api-secrets
+  existingSecretName: resume-builder-db-db-secrets
