@@ -7,8 +7,8 @@ replicaCount: 1
 # Move uploads to S3 (with an IAM role for the pod) before scaling this out.
 
 image:
-  repository: aruna451/resume-builder-api:latest
-  tag: dev-latest   # pin to a commit SHA in real environments, not :latest
+  repository: aruna451/resume-builder-api
+  tag: latest   # pin to a commit SHA in real environments, not :latest
   pullPolicy: IfNotPresent
 
 nameOverride: ""
