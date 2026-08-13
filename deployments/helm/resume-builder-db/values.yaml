@@ -1,0 +1,42 @@
+image:
+  repository: postgres
+  tag: "16-alpine"
+  pullPolicy: IfNotPresent
+
+containerPort: 5432
+
+service:
+  port: 5432
+
+env:
+  POSTGRES_DB: resume_builder
+
+# Must match the DB_USERNAME / DB_PASSWORD used by the api chart's
+# secrets values, since the api connects to this database.
+secrets:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+probes:
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  liveness:
+    initialDelaySeconds: 20
+    periodSeconds: 15
+
+persistence:
+  enabled: true
+  mountPath: /var/lib/postgresql/data
+  claimName: resume-builder-db-data
+  accessMode: ReadWriteOnce
+  storageClassName: ""
+  size: 5Gi

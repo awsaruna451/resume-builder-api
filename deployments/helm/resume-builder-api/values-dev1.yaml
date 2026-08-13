@@ -1,4 +1,13 @@
 secrets:
-  DB_USERNAME: "myuser"
-  DB_PASSWORD: "mypassword"
-  JWT_SECRET: "my-super-secret-key"
+  DB_USERNAME: "postgres"
+  DB_PASSWORD: "postgres"
+  JWT_SECRET: "a7F2kLm9QwX4vNp8RtY6cHs3ZdJ1Bg5KeU7mPn2Xq9Vr4Ts8"
+
+db:
+  # If the db chart is released as "resume-builder-db" in the same namespace,
+  # its service is named "<release-name>-db" and its secret is
+  # "<release-name>-db-secrets" (see resume-builder-db chart's _helpers.tpl).
+  host: resume-builder-db-db.resume-builder.svc.cluster.local
+  port: 5432
+  name: resume_builder
+  existingSecretName: resume-builder-db-db-secrets

@@ -7,7 +7,7 @@ replicaCount: 1
 # Move uploads to S3 (with an IAM role for the pod) before scaling this out.
 
 image:
-  repository: 324037296112.dkr.ecr.us-east-1.amazonaws.com/resume-builder-api
+  repository: aruna451/resume-builder-api:latest
   tag: dev-latest   # pin to a commit SHA in real environments, not :latest
   pullPolicy: IfNotPresent
 
@@ -53,7 +53,7 @@ persistence:
   enabled: true
   claimName: resume-uploads-pvc
   accessMode: ReadWriteOnce
-  storageClassName: gp2
+  storageClassName: standard
   size: 1Gi
   mountPath: /app/uploads
 

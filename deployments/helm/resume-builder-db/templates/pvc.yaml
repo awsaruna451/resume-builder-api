@@ -5,7 +5,7 @@ metadata:
   name: {{ .Values.persistence.claimName }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "resume-builder-api.labels" . | nindent 4 }}
+    {{- include "resume-builder-db.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.persistence.accessMode }}

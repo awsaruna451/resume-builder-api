@@ -1,0 +1,15 @@
+PostgreSQL has been deployed as {{ include "resume-builder-db.fullname" . }}.
+
+Reachable inside the cluster at:
+  {{ include "resume-builder-db.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+To point your api chart at this database, set (in the api chart's values):
+  DB_HOST = {{ include "resume-builder-db.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local
+  DB_PORT = {{ .Values.service.port }}
+  DB_USERNAME / DB_PASSWORD = must match secrets.POSTGRES_USER / secrets.POSTGRES_PASSWORD below
+
+IMPORTANT:
+- secrets.POSTGRES_USER / secrets.POSTGRES_PASSWORD are plaintext in values.yaml by
+  default. Override them via --set or a private values file for anything beyond
+  local testing, and keep them in sync with whatever the api chart is configured
+  to send as DB_USERNAME / DB_PASSWORD.

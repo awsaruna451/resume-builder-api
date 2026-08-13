@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "resume-builder-db.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "resume-builder-db.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "resume-builder-db.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "resume-builder-db.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "resume-builder-db.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.containerPort }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - $(POSTGRES_USER)
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - $(POSTGRES_USER)
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.env.POSTGRES_DB | quote }}
+            - name: PGDATA
+              value: {{ .Values.persistence.mountPath }}/pgdata
+          envFrom:
+            - secretRef:
+                name: {{ include "resume-builder-db.fullname" . }}-secrets
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: postgres-data
+              mountPath: {{ .Values.persistence.mountPath }}
+          {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.claimName }}
+      {{- else }}
+      volumes:
+        - name: postgres-data
+          emptyDir: {}
+      {{- end }}
