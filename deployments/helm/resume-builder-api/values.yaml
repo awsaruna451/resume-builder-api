@@ -47,7 +47,6 @@ env:
 
 # Name of the k8s Secret consumed via envFrom (normally produced by the
 # ExternalSecret below — DB_USERNAME, DB_PASSWORD, JWT_SECRET, etc).
-existingSecretName: resume-builder-secrets
 
 persistence:
   enabled: true
